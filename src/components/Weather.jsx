@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "./Weather.css";
-// Import custom CSS for styling
+
 const Weather = () => {
   const [city, setCity] = useState("");
   const [weather, setWeather] = useState(null);
   const [nearbyCities, setNearbyCities] = useState([]);
-  const API_KEY = "12a910a6216ab6dcd12568e63c6a5345"; // Replace with your OpenWeather API key // Fetch weather by city name
+  const API_KEY = "12a910a6216ab6dcd12568e63c6a5345"; // Replace with your OpenWeather API key
+
+  // Fetch weather by city name
   const fetchWeatherByCity = async (cityName) => {
     try {
       const response = await fetch(
@@ -14,7 +16,6 @@ const Weather = () => {
       const data = await response.json();
       if (data.cod === 200) {
         setWeather(data);
-        console.log(data);
         fetchNearbyCities(data.coord.lat, data.coord.lon);
       } else {
         alert(`Error: ${data.message}`);
@@ -22,7 +23,9 @@ const Weather = () => {
     } catch (error) {
       console.error("Error fetching weather data:", error);
     }
-  }; // Fetch weather by coordinates (latitude & longitude)
+  };
+
+  // Fetch weather by coordinates (latitude & longitude)
   const fetchWeatherByCoords = async (lat, lon) => {
     try {
       const response = await fetch(
@@ -38,7 +41,9 @@ const Weather = () => {
     } catch (error) {
       console.error("Error fetching weather data:", error);
     }
-  }; // Fetch nearby cities weather
+  };
+
+  // Fetch nearby cities weather
   const fetchNearbyCities = async (lat, lon) => {
     try {
       const response = await fetch(
@@ -49,23 +54,36 @@ const Weather = () => {
     } catch (error) {
       console.error("Error fetching nearby cities:", error);
     }
-  }; // Get user's current location when the component mounts
+  };
+
+  // Get user's current location when the component mounts
   useEffect(() => {
-    if (navigator.geolocation) {
+    let isMounted = true;
+
+    if (navigator.geolocation && isMounted) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
-          fetchWeatherByCoords(latitude, longitude);
+          if (isMounted) {
+            const { latitude, longitude } = position.coords;
+            fetchWeatherByCoords(latitude, longitude);
+          }
         },
         (error) => {
-          console.error("Geolocation error:", error);
-          alert("Location access denied. Please enter a city manually.");
+          if (isMounted) {
+            console.error("Geolocation error:", error);
+            alert("Location access denied. Please enter a city manually.");
+          }
         }
       );
     } else {
-      alert("Geolocation is not supported by your browser.");
+      if (isMounted) alert("Geolocation is not supported by your browser.");
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
   return (
     <div className="weather-container">
       <h1 className="title">🌤 Weather App</h1>
@@ -79,12 +97,8 @@ const Weather = () => {
           />
           <button onClick={() => fetchWeatherByCity(city)}>Get Weather</button>
         </div>
-        {/* {weather && (
-          <div className="current-city">
-            {weather.name}, {weather.sys.country} - {weather.main.temp}°C
-          </div>
-        )} */}
       </div>
+
       {weather && (
         <div className="city-weather">
           <h4 className="city-name">
@@ -125,7 +139,7 @@ const Weather = () => {
           </div>
         </div>
       )}
-      {/* Nearby Cities */}
+
       {nearbyCities.length > 0 && (
         <div className="nearby-cities">
           <h3>Nearby Locations</h3>
@@ -151,4 +165,5 @@ const Weather = () => {
     </div>
   );
 };
+
 export default Weather;
